@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "msg.h"    /* For the message struct */
 #include <iostream>
+#include <string>
 
 
 /* The size of the shared memory chunk */
@@ -49,12 +50,15 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	shmid = shmget(key,SHARED_MEMORY_CHUNK_SIZE,0666|IPC_CREAT);
 	std::cout << shmid << std::endl;
 	/* TODO: Attach to the shared memory */
-	char *str = (char*) shmat(shmid,(void*)0,0);
+	sharedMemPtr = shmat(shmid, (void *)0, 0);
+	if(sharedMemPtr == (void*) (-1))
+	{
+		perror("shmat");
+	}
 	/* TODO: Create a message queue */
 	msqid = msgget(key,0666|IPC_CREAT);
 	std::cout << msqid << std::endl;
 	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
-
 }
 
 
@@ -128,10 +132,13 @@ void mainLoop()
 void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
+	shmdt(sharedMemPtr);
 
 	/* TODO: Deallocate the shared memory chunk */
+	shmctl(shmid,IPC_RMID,NULL);
 
 	/* TODO: Deallocate the message queue */
+	msgctl(msqid,IPC_RMID,NULL);
 }
 
 /**
@@ -158,7 +165,7 @@ int main(int argc, char** argv)
 	init(shmid, msqid, sharedMemPtr);
 
 	/* Go to the main loop */
-	mainLoop();
+	//mainLoop();
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
 

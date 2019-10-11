@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "msg.h"    /* For the message struct */
 #include <iostream>
+#include <string>
 
 /* The size of the shared memory chunk */
 #define SHARED_MEMORY_CHUNK_SIZE 1000
@@ -44,12 +45,15 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	shmid = shmget(key,SHARED_MEMORY_CHUNK_SIZE,0666|IPC_CREAT);
 	std::cout << shmid << std::endl;
 	/* TODO: Attach to the shared memory */
-	char *str = (char*) shmat(shmid,(void*)0,0);
+	sharedMemPtr = shmat(shmid, (void *)0, 0);
+	if(sharedMemPtr == (void*) (-1))
+	{
+		perror("shmat");
+	}
 	/* TODO: Attach to the message queue */
 	msqid = msgget(key,0666|IPC_CREAT);
 	std::cout << msqid << std::endl;
 	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
-
 }
 
 /**
@@ -62,6 +66,7 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
+	shmdt(sharedMemPtr);
 }
 
 /**
@@ -127,20 +132,20 @@ int main(int argc, char** argv)
 {
 
 	/* Check the command line arguments */
-	if(argc < 2)
+	/*if(argc < 2)
 	{
 		fprintf(stderr, "USAGE: %s <FILE NAME>\n", argv[0]);
 		exit(-1);
-	}
+	}*/
 
 	/* Connect to shared memory and the message queue */
 	init(shmid, msqid, sharedMemPtr);
 
 	/* Send the file */
-	send(argv[1]);
+	//send(argv[1]);
 
 	/* Cleanup */
-	cleanUp(shmid, msqid, sharedMemPtr);
+	//cleanUp(shmid, msqid, sharedMemPtr);
 
 	return 0;
 }
