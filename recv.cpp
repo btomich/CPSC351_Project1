@@ -1,4 +1,4 @@
-#include <sys/shm.h>
+	#include <sys/shm.h>
 #include <sys/msg.h>
 #include <signal.h>
 #include <stdio.h>
@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 
+using namespace std;
 
 /* The size of the shared memory chunk */
 #define SHARED_MEMORY_CHUNK_SIZE 1000
@@ -43,6 +44,7 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 		    may have the same key.
 	 */
 
+
 	 key_t key = ftok("keyfile.txt", 'a');
 	 std::cout << key << std::endl;
 
@@ -70,6 +72,12 @@ void mainLoop()
 	/* The size of the mesage */
 	int msgSize = 0;
 
+	/* A buffer to store message we will send to the sender. */
+	message sndMsg;
+
+	/* A buffer to store message received from the sender. */
+	message rcvMsg;
+
 	/* Open the file for writing */
 	FILE* fp = fopen(recvFileName, "w");
 
@@ -90,7 +98,9 @@ void mainLoop()
      * NOTE: the received file will always be saved into the file called
      * "recvfile"
      */
-
+     msgrcv(msqid,&rcvMsg,rcvMsg.size, SENDER_DATA_TYPE, 0);
+		 rcvMsg.size = 10;
+		 std::cout << "Message size is: " << rcvMsg.size << "\n";
 	/* Keep receiving until the sender set the size to 0, indicating that
  	 * there is no more data to send
  	 */
@@ -110,6 +120,8 @@ void mainLoop()
  			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
  			 * does not matter in this case).
  			 */
+
+
 		}
 		/* We are done */
 		else
@@ -165,7 +177,7 @@ int main(int argc, char** argv)
 	init(shmid, msqid, sharedMemPtr);
 
 	/* Go to the main loop */
-	//mainLoop();
+	mainLoop();
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
 

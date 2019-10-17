@@ -7,6 +7,8 @@
 #include <iostream>
 #include <string>
 
+using namespace std;
+
 /* The size of the shared memory chunk */
 #define SHARED_MEMORY_CHUNK_SIZE 1000
 
@@ -75,7 +77,6 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
  */
 void send(const char* fileName)
 {
-	fileName = "keyfile.txt";
 	/* Open the file for reading */
 	FILE* fp = fopen(fileName, "r");
 
@@ -106,6 +107,7 @@ void send(const char* fileName)
 			exit(-1);
 		}
 
+		std::cout << "The message size from the sender: " << sndMsg.size << endl;
 
 		/* TODO: Send a message to the receiver telling him that the data is ready
  		 * (message of type SENDER_DATA_TYPE)
@@ -115,11 +117,11 @@ void send(const char* fileName)
 		 //msgsnd(msqid, &sndMsg, sndMsg.size, IPC_NOWAIT); not sure if we should use IPC_NOWAIT or 0 since i dont see a declaration of IPC_NOWAIT
 		 msgsnd(msqid, &sndMsg, sndMsg.size, 0);
 
-		/* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
+		 /* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
  		 * that he finished saving the memory chunk.
  		 */
 		 rcvMsg.mtype = RECV_DONE_TYPE;
-		 msgrcv(msqid,&rcvMsg,sndMsg.size, RECV_DONE_TYPE, 0);
+		 msgrcv(msqid,&rcvMsg,rcvMsg.size, RECV_DONE_TYPE, 0);
 
 	}
 
