@@ -1,4 +1,4 @@
-	#include <sys/shm.h>
+#include <sys/shm.h>
 #include <sys/msg.h>
 #include <signal.h>
 #include <stdio.h>
@@ -98,9 +98,13 @@ void mainLoop()
      * NOTE: the received file will always be saved into the file called
      * "recvfile"
      */
-     msgrcv(msqid,&rcvMsg,rcvMsg.size, SENDER_DATA_TYPE, 0);
-		 rcvMsg.size = 10;
-		 std::cout << "Message size is: " << rcvMsg.size << "\n";
+     //msgrcv(msqid,&rcvMsg,rcvMsg.info.size, SENDER_DATA_TYPE, 0);
+		 msgrcv(msqid,&rcvMsg,sizeof(rcvMsg.info.msg), SENDER_DATA_TYPE, 0);
+		 //rcvMsg.size = 10;
+		 std::cout << "Message size is: " << rcvMsg.info.size << "\n";
+		 cout << rcvMsg.info.msg << endl;
+		 //cout << rcvMsg.msg[8] << endl;
+
 	/* Keep receiving until the sender set the size to 0, indicating that
  	 * there is no more data to send
  	 */
@@ -178,6 +182,7 @@ int main(int argc, char** argv)
 
 	/* Go to the main loop */
 	mainLoop();
+	//cleanUp(shmid, msqid, sharedMemPtr);
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
 

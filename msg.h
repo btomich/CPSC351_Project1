@@ -1,3 +1,4 @@
+
 /* The information type */
 
 #define SENDER_DATA_TYPE 1
@@ -15,8 +16,17 @@ struct message
 	/* The message type */
 	long mtype;
 
-	/* How many bytes in the message */
-	int size;
+	struct message_info
+	{
+		/* How many bytes in the message */
+		int size;
+
+		// The message written in the text file
+		char msg[100];
+	};
+	message_info info;
+
+
 
 	/**
  	 * Prints the structure
@@ -25,6 +35,6 @@ struct message
 
 	void print(FILE* fp)
 	{
-		fprintf(fp, "%ld %d", mtype, size);
+		fprintf(fp, "%ld %d", mtype, info.size);
 	}
 };

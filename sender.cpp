@@ -6,6 +6,7 @@
 #include "msg.h"    /* For the message struct */
 #include <iostream>
 #include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -87,6 +88,13 @@ void send(const char* fileName)
 	/* A buffer to store message received from the receiver. */
 	message rcvMsg;
 
+	ifstream readFile;
+	char discard;
+	readFile.open("keyfile.txt");
+	readFile.getline(sndMsg.info.msg, sizeof(sndMsg.info.msg));
+	readFile.close();
+	cout << sndMsg.info.msg << endl;
+
 	/* Was the file open? */
 	if(!fp)
 	{
@@ -101,13 +109,13 @@ void send(const char* fileName)
  		 * fread will return how many bytes it has actually read (since the last chunk may be less
  		 * than SHARED_MEMORY_CHUNK_SIZE).
  		 */
-		if((sndMsg.size = fread(sharedMemPtr, sizeof(char), SHARED_MEMORY_CHUNK_SIZE, fp)) < 0)
+		if((sndMsg.info.size = fread(sharedMemPtr, sizeof(char), SHARED_MEMORY_CHUNK_SIZE, fp)) < 0)
 		{
 			perror("fread");
 			exit(-1);
 		}
 
-		std::cout << "The message size from the sender: " << sndMsg.size << endl;
+		std::cout << "The message size from the sender: " << sndMsg.info.size << endl;
 
 		/* TODO: Send a message to the receiver telling him that the data is ready
  		 * (message of type SENDER_DATA_TYPE)
@@ -115,13 +123,14 @@ void send(const char* fileName)
 
 		 sndMsg.mtype = SENDER_DATA_TYPE;
 		 //msgsnd(msqid, &sndMsg, sndMsg.size, IPC_NOWAIT); not sure if we should use IPC_NOWAIT or 0 since i dont see a declaration of IPC_NOWAIT
-		 msgsnd(msqid, &sndMsg, sndMsg.size, 0);
+		 //msgsnd(msqid, &sndMsg, sndMsg.info.size, 0);
+		 msgsnd(msqid, &sndMsg, sizeof(sndMsg.info.msg), 0);
 
 		 /* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
  		 * that he finished saving the memory chunk.
  		 */
 		 rcvMsg.mtype = RECV_DONE_TYPE;
-		 msgrcv(msqid,&rcvMsg,rcvMsg.size, RECV_DONE_TYPE, 0);
+		 msgrcv(msqid,&rcvMsg,rcvMsg.info.size, RECV_DONE_TYPE, 0);
 
 	}
 
