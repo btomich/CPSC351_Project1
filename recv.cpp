@@ -99,33 +99,35 @@ void mainLoop()
      * "recvfile"
      */
      //msgrcv(msqid,&rcvMsg,rcvMsg.info.size, SENDER_DATA_TYPE, 0);
-		 msgrcv(msqid,&rcvMsg,sizeof(rcvMsg.info.msg), SENDER_DATA_TYPE, 0);
-		 //rcvMsg.size = 10;
-		 std::cout << "Message size is: " << rcvMsg.info.size << "\n";
-		 cout << rcvMsg.info.msg << endl;
+
 		 //cout << rcvMsg.msg[8] << endl;
 
 	/* Keep receiving until the sender set the size to 0, indicating that
  	 * there is no more data to send
  	 */
-
-	while(msgSize != 0)
-	{
-		/* If the sender is not telling us that we are done, then get to work */
-		if(msgSize != 0)
+	 do{
+		 msgrcv(msqid,&rcvMsg,sizeof(rcvMsg.info.msg), SENDER_DATA_TYPE, 0);
+		 //rcvMsg.size = 10;
+		 std::cout << "Message size is: " << rcvMsg.info.size << "\n";
+		 cout << rcvMsg.info.msg << endl;
+		 msgSize = rcvMsg.info.size;
+		 cout << "msgSize: " << msgSize << endl;
+		 if(msgSize != 0)
 		{
-			/* Save the shared memory to file */
+			//Save the shared memory to file
 			if(fwrite(sharedMemPtr, sizeof(char), msgSize, fp) < 0)
 			{
 				perror("fwrite");
 			}
+			rcvMsg.print(fp);
+			msgSize = 0;
 
 			/* TODO: Tell the sender that we are ready for the next file chunk.
  			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
  			 * does not matter in this case).
  			 */
-
-
+			 sndMsg.mtype = RECV_DONE_TYPE;
+			 msgsnd(msqid, &sndMsg, sizeof(sndMsg.info.msg), 0);
 		}
 		/* We are done */
 		else
@@ -133,7 +135,7 @@ void mainLoop()
 			/* Close the file */
 			fclose(fp);
 		}
-	}
+}while(msgSize != 0);
 }
 
 
@@ -166,11 +168,12 @@ void ctrlCSignal(int signal)
 {
 	/* Free system V resources */
 	cleanUp(shmid, msqid, sharedMemPtr);
+	cout << "Exiting\n";
+	exit(0);
 }
 
 int main(int argc, char** argv)
 {
-
 	/* TODO: Install a signal handler (see signaldemo.cpp sample file).
  	 * In a case user presses Ctrl-c your program should delete message
  	 * queues and shared memory before exiting. You may add the cleaning functionality
@@ -185,6 +188,11 @@ int main(int argc, char** argv)
 	//cleanUp(shmid, msqid, sharedMemPtr);
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
+	signal(SIGINT, ctrlCSignal);
+	for(;;)
+	{
+		sleep(1);
+	}
 
 	return 0;
 }

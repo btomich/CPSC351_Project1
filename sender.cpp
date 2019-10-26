@@ -140,11 +140,10 @@ void send(const char* fileName)
 	  */
 
 		//reinitializing mtype in case it was modified by receiver?
-		sndMsg.mtype = SENDER_DATA_TYPE;
-		msgsnd(msqid, &sndMsg, 0, 0);
 
 	/* Close the file */
 	fclose(fp);
+	cout << sndMsg.info.size << endl;
 
 }
 
