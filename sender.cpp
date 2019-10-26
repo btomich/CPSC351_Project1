@@ -41,11 +41,10 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	 */
 
 	 key_t key = ftok("keyfile.txt", 'a');
-	 std::cout << key << std::endl;
 
 	/* TODO: Get the id of the shared memory segment. The size of the segment must be SHARED_MEMORY_CHUNK_SIZE */
 	shmid = shmget(key,SHARED_MEMORY_CHUNK_SIZE,0666|IPC_CREAT);
-	std::cout << shmid << std::endl;
+
 	/* TODO: Attach to the shared memory */
 	sharedMemPtr = shmat(shmid, (void *)0, 0);
 	if(sharedMemPtr == (void*) (-1))
@@ -54,7 +53,6 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	}
 	/* TODO: Attach to the message queue */
 	msqid = msgget(key,0666|IPC_CREAT);
-	std::cout << msqid << std::endl;
 	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
 
 }
@@ -70,6 +68,7 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
 	shmdt(sharedMemPtr);
+	cout << "Cleanup funtion called " << endl;
 }
 
 /**
@@ -124,13 +123,17 @@ void send(const char* fileName)
 		 sndMsg.mtype = SENDER_DATA_TYPE;
 		 //msgsnd(msqid, &sndMsg, sndMsg.size, IPC_NOWAIT); not sure if we should use IPC_NOWAIT or 0 since i dont see a declaration of IPC_NOWAIT
 		 //msgsnd(msqid, &sndMsg, sndMsg.info.size, 0);
+		 cout << "Sender is sending the message" << endl;
 		 msgsnd(msqid, &sndMsg, sizeof(sndMsg.info.msg), 0);
+		 cout << "Sender sent the message" << endl;
 
 		 /* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
  		 * that he finished saving the memory chunk.
  		 */
 		 rcvMsg.mtype = RECV_DONE_TYPE;
-		 msgrcv(msqid,&rcvMsg,rcvMsg.info.size, RECV_DONE_TYPE, 0);
+		 cout << "Sender is recieving the message" << endl;
+		 msgrcv(msqid,&rcvMsg, sizeof(rcvMsg.info.msg), RECV_DONE_TYPE, 0);
+		 cout << "Sender is recieved the message" << endl;
 
 	}
 
@@ -142,8 +145,15 @@ void send(const char* fileName)
 		//reinitializing mtype in case it was modified by receiver?
 
 	/* Close the file */
+  int test = 1;
+
 	fclose(fp);
-	cout << sndMsg.info.size << endl;
+	cout << "Close file funtion executed" << endl;
+	sndMsg.mtype = SENDER_DATA_TYPE;
+	cout << "Sending message notifying recv that there is nothing else to send" << endl;
+	test = msgsnd(msqid, &sndMsg, 0 , 0);
+	cout << "mssnd() returned: " << test << endl;
+	cout << "Message sent (nothing else left to send)" << endl;
 
 }
 
@@ -163,6 +173,7 @@ int main(int argc, char** argv)
 
 	/* Send the file */
 	send(argv[1]);
+	cout << "Send function executed" << endl;
 
 	/* Cleanup */
 	cleanUp(shmid, msqid, sharedMemPtr);

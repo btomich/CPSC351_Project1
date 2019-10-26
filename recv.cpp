@@ -46,11 +46,10 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 
 
 	 key_t key = ftok("keyfile.txt", 'a');
-	 std::cout << key << std::endl;
 
 	/* TODO: Allocate a piece of shared memory. The size of the segment must be SHARED_MEMORY_CHUNK_SIZE. */
 	shmid = shmget(key,SHARED_MEMORY_CHUNK_SIZE,0666|IPC_CREAT);
-	std::cout << shmid << std::endl;
+
 	/* TODO: Attach to the shared memory */
 	sharedMemPtr = shmat(shmid, (void *)0, 0);
 	if(sharedMemPtr == (void*) (-1))
@@ -59,7 +58,6 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	}
 	/* TODO: Create a message queue */
 	msqid = msgget(key,0666|IPC_CREAT);
-	std::cout << msqid << std::endl;
 	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
 }
 
@@ -105,22 +103,24 @@ void mainLoop()
 	/* Keep receiving until the sender set the size to 0, indicating that
  	 * there is no more data to send
  	 */
+	 int test = 0;
 	 do{
+		 cout << "Waiting to receive message" << endl;
 		 msgrcv(msqid,&rcvMsg,sizeof(rcvMsg.info.msg), SENDER_DATA_TYPE, 0);
+		 cout << "Message recieved" << endl;
 		 //rcvMsg.size = 10;
 		 std::cout << "Message size is: " << rcvMsg.info.size << "\n";
-		 cout << rcvMsg.info.msg << endl;
 		 msgSize = rcvMsg.info.size;
-		 cout << "msgSize: " << msgSize << endl;
+		 cout << "Output of the message is: " << rcvMsg.info.msg << endl;
 		 if(msgSize != 0)
 		{
+			cout << "Message is not zero" << endl;
 			//Save the shared memory to file
 			if(fwrite(sharedMemPtr, sizeof(char), msgSize, fp) < 0)
 			{
 				perror("fwrite");
 			}
 			rcvMsg.print(fp);
-			msgSize = 0;
 
 			/* TODO: Tell the sender that we are ready for the next file chunk.
  			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
@@ -128,6 +128,9 @@ void mainLoop()
  			 */
 			 sndMsg.mtype = RECV_DONE_TYPE;
 			 msgsnd(msqid, &sndMsg, sizeof(sndMsg.info.msg), 0);
+			 cout << "Reciever sent messsage notifying the sender thats its ready for next file chunk" << endl;
+			 ++test;
+			 cout << "Loop iterated " << test << " times" << endl;
 		}
 		/* We are done */
 		else
@@ -135,7 +138,9 @@ void mainLoop()
 			/* Close the file */
 			fclose(fp);
 		}
-}while(msgSize != 0);
+   }while(msgSize != 0);
+
+	 cout << "EXITED LOOOP!!!" << endl;
 }
 
 
@@ -158,7 +163,6 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 	/* TODO: Deallocate the message queue */
 	msgctl(msqid,IPC_RMID,NULL);
 }
-
 /**
  * Handles the exit signal
  * @param signal - the signal type
@@ -182,10 +186,12 @@ int main(int argc, char** argv)
 
 	/* Initialize */
 	init(shmid, msqid, sharedMemPtr);
+	cout << "initialize method finished " << endl;
 
 	/* Go to the main loop */
 	mainLoop();
-	//cleanUp(shmid, msqid, sharedMemPtr);
+	cout << "mainLoop Method called " <<  endl;
+	cout << "cleanUp Method called " <<  endl;
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
 	signal(SIGINT, ctrlCSignal);
