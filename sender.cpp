@@ -92,7 +92,6 @@ void send(const char* fileName)
 	readFile.open("keyfile.txt");
 	readFile.getline(sndMsg.info.msg, sizeof(sndMsg.info.msg));
 	readFile.close();
-	cout << sndMsg.info.msg << endl;
 
 	/* Was the file open? */
 	if(!fp)
@@ -114,6 +113,7 @@ void send(const char* fileName)
 			exit(-1);
 		}
 
+
 		std::cout << "The message size from the sender: " << sndMsg.info.size << endl;
 
 		/* TODO: Send a message to the receiver telling him that the data is ready
@@ -121,8 +121,6 @@ void send(const char* fileName)
  		 */
 
 		 sndMsg.mtype = SENDER_DATA_TYPE;
-		 //msgsnd(msqid, &sndMsg, sndMsg.size, IPC_NOWAIT); not sure if we should use IPC_NOWAIT or 0 since i dont see a declaration of IPC_NOWAIT
-		 //msgsnd(msqid, &sndMsg, sndMsg.info.size, 0);
 		 cout << "Sender is sending the message" << endl;
 		 msgsnd(msqid, &sndMsg, sizeof(sndMsg.info.msg), 0);
 		 cout << "Sender sent the message" << endl;
@@ -142,19 +140,17 @@ void send(const char* fileName)
  	  * sending a message of type SENDER_DATA_TYPE with size field set to 0.
 	  */
 
-		//reinitializing mtype in case it was modified by receiver?
-
 	/* Close the file */
   int test = 1;
+	message doneMsg;
 
 	fclose(fp);
 	cout << "Close file funtion executed" << endl;
-	sndMsg.mtype = SENDER_DATA_TYPE;
+	doneMsg.mtype = SENDER_DATA_TYPE;
 	cout << "Sending message notifying recv that there is nothing else to send" << endl;
-	test = msgsnd(msqid, &sndMsg, 0 , 0);
+	test = msgsnd(msqid, &doneMsg, sizeof(doneMsg.info.msg) , 0);
 	cout << "mssnd() returned: " << test << endl;
 	cout << "Message sent (nothing else left to send)" << endl;
-
 }
 
 

@@ -96,9 +96,6 @@ void mainLoop()
      * NOTE: the received file will always be saved into the file called
      * "recvfile"
      */
-     //msgrcv(msqid,&rcvMsg,rcvMsg.info.size, SENDER_DATA_TYPE, 0);
-
-		 //cout << rcvMsg.msg[8] << endl;
 
 	/* Keep receiving until the sender set the size to 0, indicating that
  	 * there is no more data to send
@@ -108,7 +105,6 @@ void mainLoop()
 		 cout << "Waiting to receive message" << endl;
 		 msgrcv(msqid,&rcvMsg,sizeof(rcvMsg.info.msg), SENDER_DATA_TYPE, 0);
 		 cout << "Message recieved" << endl;
-		 //rcvMsg.size = 10;
 		 std::cout << "Message size is: " << rcvMsg.info.size << "\n";
 		 msgSize = rcvMsg.info.size;
 		 cout << "Output of the message is: " << rcvMsg.info.msg << endl;
@@ -172,7 +168,7 @@ void ctrlCSignal(int signal)
 {
 	/* Free system V resources */
 	cleanUp(shmid, msqid, sharedMemPtr);
-	cout << "Exiting\n";
+	cout << "\nExiting\n";
 	exit(0);
 }
 
