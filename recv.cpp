@@ -104,13 +104,11 @@ void mainLoop()
 	 do{
 		 cout << "Waiting to receive message" << endl;
 		 msgrcv(msqid,&rcvMsg,sizeof(rcvMsg.info.msg), SENDER_DATA_TYPE, 0);
-		 cout << "Message recieved" << endl;
 		 std::cout << "Message size is: " << rcvMsg.info.size << "\n";
 		 msgSize = rcvMsg.info.size;
 		 cout << "Output of the message is: " << rcvMsg.info.msg << endl;
 		 if(msgSize != 0)
 		{
-			cout << "Message is not zero" << endl;
 			//Save the shared memory to file
 			if(fwrite(sharedMemPtr, sizeof(char), msgSize, fp) < 0)
 			{
@@ -125,8 +123,6 @@ void mainLoop()
 			 sndMsg.mtype = RECV_DONE_TYPE;
 			 msgsnd(msqid, &sndMsg, sizeof(sndMsg.info.msg), 0);
 			 cout << "Reciever sent messsage notifying the sender thats its ready for next file chunk" << endl;
-			 ++test;
-			 cout << "Loop iterated " << test << " times" << endl;
 		}
 		/* We are done */
 		else
@@ -134,6 +130,8 @@ void mainLoop()
 			/* Close the file */
 			fclose(fp);
 		}
+		++test;
+		cout << "Loop iterated " << test << " times" << endl;
    }while(msgSize != 0);
 
 	 cout << "EXITED LOOOP!!!" << endl;
@@ -182,12 +180,11 @@ int main(int argc, char** argv)
 
 	/* Initialize */
 	init(shmid, msqid, sharedMemPtr);
-	cout << "initialize method finished " << endl;
 
 	/* Go to the main loop */
 	mainLoop();
-	cout << "mainLoop Method called " <<  endl;
-	cout << "cleanUp Method called " <<  endl;
+
+
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
 	signal(SIGINT, ctrlCSignal);

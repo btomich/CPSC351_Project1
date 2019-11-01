@@ -68,7 +68,6 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
 	shmdt(sharedMemPtr);
-	cout << "Cleanup funtion called " << endl;
 }
 
 /**
@@ -114,25 +113,21 @@ void send(const char* fileName)
 		}
 
 
-		std::cout << "The message size from the sender: " << sndMsg.info.size << endl;
+		cout << "The message size from the sender: " << sndMsg.info.size << endl;
+		cout << "The message from the sender: " << sndMsg.info.msg << endl;
 
 		/* TODO: Send a message to the receiver telling him that the data is ready
  		 * (message of type SENDER_DATA_TYPE)
  		 */
 
 		 sndMsg.mtype = SENDER_DATA_TYPE;
-		 cout << "Sender is sending the message" << endl;
 		 msgsnd(msqid, &sndMsg, sizeof(sndMsg.info.msg), 0);
-		 cout << "Sender sent the message" << endl;
 
 		 /* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
  		 * that he finished saving the memory chunk.
  		 */
 		 rcvMsg.mtype = RECV_DONE_TYPE;
-		 cout << "Sender is recieving the message" << endl;
 		 msgrcv(msqid,&rcvMsg, sizeof(rcvMsg.info.msg), RECV_DONE_TYPE, 0);
-		 cout << "Sender is recieved the message" << endl;
-
 	}
 
 	/** TODO: once we are out of the above loop, we have finished sending the file.
@@ -141,16 +136,11 @@ void send(const char* fileName)
 	  */
 
 	/* Close the file */
-  int test = 1;
 	message doneMsg;
-
 	fclose(fp);
-	cout << "Close file funtion executed" << endl;
+	cout << "Nothing more to send\n";
 	doneMsg.mtype = SENDER_DATA_TYPE;
-	cout << "Sending message notifying recv that there is nothing else to send" << endl;
-	test = msgsnd(msqid, &doneMsg, sizeof(doneMsg.info.msg) , 0);
-	cout << "mssnd() returned: " << test << endl;
-	cout << "Message sent (nothing else left to send)" << endl;
+	msgsnd(msqid, &doneMsg, sizeof(doneMsg.info.msg) , 0);
 }
 
 
@@ -169,7 +159,6 @@ int main(int argc, char** argv)
 
 	/* Send the file */
 	send(argv[1]);
-	cout << "Send function executed" << endl;
 
 	/* Cleanup */
 	cleanUp(shmid, msqid, sharedMemPtr);
